@@ -23,7 +23,7 @@ EOT
     api_management_name = string
     name                = string
     resource_group_name = string
-    buffered            = optional(bool, true)
+    buffered            = optional(bool) # Default: true
     description         = optional(string)
     resource_id         = optional(string)
     application_insights = optional(object({
