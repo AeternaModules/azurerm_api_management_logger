@@ -1,3 +1,7 @@
+output "api_management_loggers_id" {
+  description = "Map of id values across all api_management_loggers, keyed the same as var.api_management_loggers"
+  value       = { for k, v in azurerm_api_management_logger.api_management_loggers : k => v.id }
+}
 output "api_management_loggers_api_management_name" {
   description = "Map of api_management_name values across all api_management_loggers, keyed the same as var.api_management_loggers"
   value       = { for k, v in azurerm_api_management_logger.api_management_loggers : k => v.api_management_name }
