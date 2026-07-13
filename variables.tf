@@ -37,48 +37,70 @@ EOT
       user_assigned_identity_client_id = optional(string)
     }))
   }))
-  # --- Unconfirmed validation candidates, derived from azurerm_api_management_logger's provider source ---
-  # Not auto-enabled: either a bespoke provider validator we can't safely translate,
-  # or a path that crosses a list-typed block (needs its own for_each wrapping).
-  # Review, translate into a real validation{} block above, and delete once confirmed.
-  # path: name
-  #   source:    [from validate.ApiManagementChildName] !matched
-  # path: resource_group_name
-  #   condition: length(value) <= 90
-  #   message:   [from resourcegroups.ValidateName: invalid when len(value) > 90]
-  #   source:    [from resourcegroups.ValidateName: invalid when len(value) > 90]
-  # path: resource_group_name
-  #   condition: !endswith(value, ".")
-  #   message:   [from resourcegroups.ValidateName: must not end with "."]
-  #   source:    [from resourcegroups.ValidateName: must not end with "."]
-  # path: resource_group_name
-  #   condition: length(value) != 0
-  #   message:   [from resourcegroups.ValidateName: invalid when len(value) == 0]
-  #   source:    [from resourcegroups.ValidateName: invalid when len(value) == 0]
-  # path: resource_group_name
-  #   source:    [from resourcegroups.ValidateName] !matched
-  # path: api_management_name
-  #   source:    [from validate.ApiManagementServiceName] !matched
-  # path: resource_id
-  #   source:    [from azure.ValidateResourceID] !ok
-  # path: resource_id
-  #   source:    [from azure.ValidateResourceID] err != nil
-  # path: eventhub.name
-  #   source:    validate.ValidateEventHubName: no recognizable `if ... { errors = append(...) }` pattern - read it by hand
-  # path: eventhub.connection_string
-  #   condition: length(value) > 0
-  #   message:   must not be empty
-  # path: eventhub.endpoint_uri
-  #   condition: length(value) > 0
-  #   message:   must not be empty
-  # path: eventhub.user_assigned_identity_client_id
-  #   condition: can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", value))
-  #   message:   must be a valid UUID
-  # path: application_insights.connection_string
-  #   condition: length(value) > 0
-  #   message:   must not be empty
-  # path: application_insights.instrumentation_key
-  #   condition: length(value) > 0
-  #   message:   must not be empty
+  validation {
+    condition = alltrue([
+      for k, v in var.api_management_loggers : (
+        length(v.resource_group_name) <= 90
+      )
+    ])
+    error_message = "[from resourcegroups.ValidateName: invalid when len(value) > 90]"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.api_management_loggers : (
+        !endswith(v.resource_group_name, ".")
+      )
+    ])
+    error_message = "[from resourcegroups.ValidateName: must not end with \".\"]"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.api_management_loggers : (
+        length(v.resource_group_name) != 0
+      )
+    ])
+    error_message = "[from resourcegroups.ValidateName: invalid when len(value) == 0]"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.api_management_loggers : (
+        v.eventhub == null || (v.eventhub.connection_string == null || (length(v.eventhub.connection_string) > 0))
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.api_management_loggers : (
+        v.eventhub == null || (v.eventhub.endpoint_uri == null || (length(v.eventhub.endpoint_uri) > 0))
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.api_management_loggers : (
+        v.eventhub == null || (v.eventhub.user_assigned_identity_client_id == null || (can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", v.eventhub.user_assigned_identity_client_id))))
+      )
+    ])
+    error_message = "must be a valid UUID"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.api_management_loggers : (
+        v.application_insights == null || (v.application_insights.connection_string == null || (length(v.application_insights.connection_string) > 0))
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.api_management_loggers : (
+        v.application_insights == null || (v.application_insights.instrumentation_key == null || (length(v.application_insights.instrumentation_key) > 0))
+      )
+    ])
+    error_message = "must not be empty"
+  }
+  # Note: 6 additional provider-side validators are enforced at apply time but not mirrored as validation{} blocks here (bespoke or non-mechanically-translatable).
 }
 
