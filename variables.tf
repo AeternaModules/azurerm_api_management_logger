@@ -23,7 +23,7 @@ EOT
     api_management_name = string
     name                = string
     resource_group_name = string
-    buffered            = optional(bool) # Default: true
+    buffered            = optional(bool)
     description         = optional(string)
     resource_id         = optional(string)
     application_insights = optional(object({
@@ -37,46 +37,6 @@ EOT
       user_assigned_identity_client_id = optional(string)
     }))
   }))
-  validation {
-    condition = alltrue([
-      for k, v in var.api_management_loggers : (
-        v.eventhub == null || (v.eventhub.connection_string == null || (length(v.eventhub.connection_string) > 0))
-      )
-    ])
-    error_message = "must not be empty"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.api_management_loggers : (
-        v.eventhub == null || (v.eventhub.endpoint_uri == null || (length(v.eventhub.endpoint_uri) > 0))
-      )
-    ])
-    error_message = "must not be empty"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.api_management_loggers : (
-        v.eventhub == null || (v.eventhub.user_assigned_identity_client_id == null || (can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", v.eventhub.user_assigned_identity_client_id))))
-      )
-    ])
-    error_message = "must be a valid UUID"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.api_management_loggers : (
-        v.application_insights == null || (v.application_insights.connection_string == null || (length(v.application_insights.connection_string) > 0))
-      )
-    ])
-    error_message = "must not be empty"
-  }
-  validation {
-    condition = alltrue([
-      for k, v in var.api_management_loggers : (
-        v.application_insights == null || (v.application_insights.instrumentation_key == null || (length(v.application_insights.instrumentation_key) > 0))
-      )
-    ])
-    error_message = "must not be empty"
-  }
   # --- Unconfirmed validation candidates, derived from azurerm_api_management_logger's provider source ---
   # Not auto-enabled: either a bespoke provider validator we can't safely translate,
   # or a path that crosses a list-typed block (needs its own for_each wrapping).
@@ -105,5 +65,20 @@ EOT
   #   source:    [from azure.ValidateResourceID] err != nil
   # path: eventhub.name
   #   source:    validate.ValidateEventHubName: no recognizable `if ... { errors = append(...) }` pattern - read it by hand
+  # path: eventhub.connection_string
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: eventhub.endpoint_uri
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: eventhub.user_assigned_identity_client_id
+  #   condition: can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", value))
+  #   message:   must be a valid UUID
+  # path: application_insights.connection_string
+  #   condition: length(value) > 0
+  #   message:   must not be empty
+  # path: application_insights.instrumentation_key
+  #   condition: length(value) > 0
+  #   message:   must not be empty
 }
 
