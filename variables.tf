@@ -11,6 +11,7 @@ Optional:
     - resource_id
     - application_insights (block):
         - connection_string (optional)
+        - identity_client_id (optional)
         - instrumentation_key (optional)
     - eventhub (block):
         - connection_string (optional)
@@ -28,6 +29,7 @@ EOT
     resource_id         = optional(string)
     application_insights = optional(object({
       connection_string   = optional(string)
+      identity_client_id  = optional(string)
       instrumentation_key = optional(string)
     }))
     eventhub = optional(object({
@@ -100,6 +102,14 @@ EOT
       )
     ])
     error_message = "must not be empty"
+  }
+  validation {
+    condition = alltrue([
+      for k, v in var.api_management_loggers : (
+        v.application_insights == null || (v.application_insights.identity_client_id == null || ((can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", v.application_insights.identity_client_id))) || (contains(["SystemAssigned"], v.application_insights.identity_client_id))))
+      )
+    ])
+    error_message = "any of: must be a valid UUID; must be one of: SystemAssigned"
   }
   # Note: 6 additional provider-side validators are enforced at apply time but not mirrored as validation{} blocks here (bespoke or non-mechanically-translatable).
 }

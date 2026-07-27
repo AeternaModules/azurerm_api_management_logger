@@ -12,6 +12,7 @@ resource "azurerm_api_management_logger" "api_management_loggers" {
     for_each = each.value.application_insights != null ? [each.value.application_insights] : []
     content {
       connection_string   = application_insights.value.connection_string
+      identity_client_id  = application_insights.value.identity_client_id
       instrumentation_key = application_insights.value.instrumentation_key
     }
   }
