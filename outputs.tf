@@ -8,7 +8,7 @@ output "api_management_loggers_api_management_name" {
 }
 output "api_management_loggers_application_insights" {
   description = "Map of application_insights values across all api_management_loggers, keyed the same as var.api_management_loggers"
-  value       = { for k, v in azurerm_api_management_logger.api_management_loggers : k => v.application_insights if v.application_insights != null && length(v.application_insights) > 0 }
+  value       = { for k, v in azurerm_api_management_logger.api_management_loggers : k => one(v.application_insights) if v.application_insights != null && length(v.application_insights) > 0 }
   sensitive   = true
 }
 output "api_management_loggers_buffered" {
@@ -21,7 +21,7 @@ output "api_management_loggers_description" {
 }
 output "api_management_loggers_eventhub" {
   description = "Map of eventhub values across all api_management_loggers, keyed the same as var.api_management_loggers"
-  value       = { for k, v in azurerm_api_management_logger.api_management_loggers : k => v.eventhub if v.eventhub != null && length(v.eventhub) > 0 }
+  value       = { for k, v in azurerm_api_management_logger.api_management_loggers : k => one(v.eventhub) if v.eventhub != null && length(v.eventhub) > 0 }
   sensitive   = true
 }
 output "api_management_loggers_name" {
